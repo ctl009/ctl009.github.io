@@ -13,7 +13,7 @@ const last_posts = posts.slice(0, 3);
   <div class="pb-12 mt-5">
     <div class="text-xl py-1">Hey there!</div>
     <div class="text-5xl font-bold">I'm Chris Lee</div>
-    <div class="text-3xl py-3 font-bold">Robotics and Mechanical Engineer</div>
+    <div class="text-3xl py-3 font-bold">Robotics Engineer</div>
     <div class="py-2">
       <text class="text-lg">
         This is my personal website where you can find my past projects!
@@ -22,49 +22,31 @@ const last_posts = posts.slice(0, 3);
   </div>
 
   <div>
-    <div class="text-3xl w-full font-bold mb-2">My last projects {"</>"}</div>
+    <div class="text-3xl w-full font-bold mb-2">My latest projects</div>
   </div>
 
   <HorizontalCard
-    title="Demo Project 1"
+    title="Construction Robot: Blown Insulation (Capstone)"
     img="/post_img.webp"
-    desc="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    desc="We developed a robot capable of delivering blown insulation autonomously."
     url="#"
     badge="NEW"
   />
   <div class="divider my-0"></div>
   <HorizontalCard
-    title="Demo Project 2"
-    img="/post_img.webp"
-    desc="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    title="Basketball Autozooming Bot"
+    img="/bball_autozoom.gif"
+    desc="A bot that automatically zooms in and out in a basketball game, focusing on the play."
     url="#"
   />
   <div class="divider my-0"></div>
   <HorizontalCard
-    title="Demo Project 3"
-    img="/post_img.webp"
-    desc="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    title="Robot Arm Pick and Place"
+    img="/robot_pick_place.gif"
+    desc="A robot arm programmed to pick and place static and moving blocks."
     url="#"
-    badge="FOSS"
   />
+  <div class="divider my-0"></div>
 
-  <div>
-    <div class="text-3xl w-full font-bold mb-5 mt-10">Latest from blog</div>
-  </div>
 
-  {
-    last_posts.map((post) => (
-      <>
-        <HorizontalCard
-          title={post.data.title}
-          img={post.data.heroImage}
-          desc={post.data.description}
-          url={"/blog/" + createSlug(post.data.title, post.slug)}
-          target="_self"
-          badge={post.data.badge}
-        />
-        <div class="divider my-0" />
-      </>
-    ))
-  }
 </BaseLayout>
