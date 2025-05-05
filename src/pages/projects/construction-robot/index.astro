@@ -1,0 +1,23 @@
+---
+import ProjectLayout from "../../../layouts/ProjectLayout.astro";
+
+const project = {
+  title: "Construction Robot: Blown Insulation (Capstone)",
+  img: "/post_img.webp",
+  desc: "We developed a robot capable of delivering blown insulation autonomously.",
+  badge: "NEW",
+  date: "May 2025",
+  tags: ["ROS", "Automation"]
+};
+---
+
+<ProjectLayout {...project}>
+  <!-- your deep-dive content: screenshots, tech stack, challenges, links… -->
+  <h2 class="text-2xl font-semibold mb-4">Deep Dive</h2>
+  <ul class="list-disc list-inside">
+    <li>ROS</li>
+  </ul>
+  <a href="https://github.com/ctl009/insulation-robot" class="btn btn-outline mt-6" target="_blank">
+    View on GitHub
+  </a>
+</ProjectLayout>

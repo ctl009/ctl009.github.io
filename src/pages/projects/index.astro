@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import HorizontalCard from "../../components/HorizontalCard.astro";
+---
+
+<BaseLayout title = "Projects" sideBarActiveItemID="projects">
+  <div>
+    <div class="text-3xl w-full font-bold mb-5">Projects</div>
+  </div>
+
+  <HorizontalCard
+    title="Construction Robot: Blown Insulation (Capstone)"
+    img="/post_img.webp"
+    desc="We developed a robot capable of delivering blown insulation autonomously."
+    url="/projects/construction-robot/"
+    badge="NEW"
+  />
+  <div class="divider my-0"></div>
+  <HorizontalCard
+    title="Basketball Autozooming Bot"
+    img="/bball_autozoom.gif"
+    desc="A bot that automatically zooms in and out in a basketball game, focusing on the play."
+    url="#"
+  />
+  <div class="divider my-0"></div>
+  <HorizontalCard
+    title="Robot Arm Pick and Place"
+    img="/robot_pick_place.gif"
+    desc="A robot arm programmed to pick and place static and moving blocks."
+    url="#"
+  />
+  <div class="divider my-0"></div>
+  <HorizontalCard
+    title="Efficient LLM for Summarization"
+    img="/post_img.webp"
+    desc="We pruned and fine-tuned an LLM for summarization tasks."
+    url="#"
+  />
+  <div class="divider my-0"></div>
+  <HorizontalCard
+    title="3D Reconstruction of Forest Scenery"
+    img="/post_img.webp"
+    desc="We reconstructed a 3D forest scenery using pictures captured from a walk in the forest."
+    url="#"
+  />
+</BaseLayout>

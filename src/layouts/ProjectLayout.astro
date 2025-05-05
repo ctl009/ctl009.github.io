@@ -1,0 +1,39 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+export interface Props {
+  title: string;
+  img: string;
+  desc: string;
+  badge?: string;
+  date?: string;
+  tags?: string[];
+}
+
+const { title, img, desc, badge, date, tags = [] } = Astro.props;
+---
+
+<BaseLayout title={title} sideBarActiveItemID="projects" description={desc} image={img}>
+  <article class="prose mx-auto py-8">
+    {img && <img src={img} alt={title} class="rounded-lg mb-6 w-full" />}
+    <h1 class="text-4xl font-bold mb-2">{title}</h1>
+    {date && <time class="block mb-2">{date}</time>}
+    {badge && <span class="badge badge-secondary mb-4">{badge}</span>}
+    {tags.length > 0 && (
+      <div class="mb-4">
+        {tags.map((t) => (
+          <a href={`/projects/tag/${t}`} class="badge badge-outline mr-2">
+            {t}
+          </a>
+        ))}
+      </div>
+    )}
+    <p class="mb-6">{desc}</p>
+
+    <slot />  <!-- unique project details go here -->
+
+    <a href="/projects" class="btn btn-ghost mt-8">
+      ← Back to all projects
+    </a>
+  </article>
+</BaseLayout>
