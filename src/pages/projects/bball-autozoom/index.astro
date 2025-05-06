@@ -1,0 +1,77 @@
+---
+import ProjectLayout from "../../../layouts/ProjectLayout.astro";
+
+const project = {
+  title: "Basketball Game Autozooming Bot",
+  img: "/bball_autozoom.gif",
+  desc: "A bot that automatically zooms in and out in a basketball game, focusing on the play.",
+  date: "December 2024",
+  tags: ["Computer Vision"]
+};
+---
+
+<ProjectLayout {...project}>
+  <!-- Deep dive content -->
+  <h2 class="text-2xl font-semibold mb-4">Deep Dive</h2>
+  <p class="mb-4">
+    This project leverages computer vision techniques to track key players and action and dynamically control the zooming in a 
+    basketball game.
+  </p>
+
+  <h3 class="text-xl font-medium mb-2">Pipeline</h3>
+  <p class="mb-4">
+    As outlined below, we first extract the video frames, then detect players, referees, and basketball in the initial frames. We 
+    then segment and propagate the detected objects through the rest of the subsequent frames. We also extract the body poses of 
+    the players and referees in all frames. We perform zooming based on the detected objects and body pose information. Finally,
+    we convert the zoomed frames as a video/gif.
+  </p>
+  <img src="/autozoom_pipeline.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Autozooming pipeline
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Object Detection</h3>
+  <p class="mb-4">
+    We trained a YOLOv5 using a custom dataset of >8000 labeled images to detect referees, players, and basketballs in the initial 
+    frame. We iterate through the initial frames until we detect at least 7 players and only one basketball.
+  </p>
+  <img src="/autozoom_obj_detection.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Object detection in initial frame
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Segmentation Propagation</h3>
+  <p class="mb-4">
+    Using Meta's Segment Anything Model 2 (SAM2), we segment each detected object from the initial frame and track the segmented
+    objects through the rest of the video. As can be seen, the model reliably tracks the initially detected players, referees,
+    and basketball throughout the duration of the video.
+  </p>
+  <img src="/autozoom_segment.gif"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Segmentation propagation
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Human Pose Estimation</h3>
+  <p class="mb-4">
+    We use Human Mesh Recovery Model 2 (HMR2) to extract the human poses from the players and referees in each frame. 
+  </p>
+  <img src="/autozoom_body_pose.gif"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Human pose estimation
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Zooming</h3>
+  <p class="mb-4">
+    We zoom by drawing bounding boxes around the ball and the nearest number of N players. The referee body orientation informs 
+    the direction of region of interest and the player rate of change of orientation informs the rate of change of region of 
+    interest. We use this information to help interpolate between frames for smooth zooming.
+  </p>
+  <img src="/autozoom_zoom.gif"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Zooming
+  </figcaption>
+
+  <a href="https://github.com/ctl009/" class="btn btn-outline mt-6" target="_blank">
+    View on GitHub
+  </a>
+</ProjectLayout>
