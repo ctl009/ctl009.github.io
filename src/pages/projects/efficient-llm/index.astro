@@ -1,0 +1,115 @@
+---
+import ProjectLayout from "../../../layouts/ProjectLayout.astro";
+
+const project = {
+  title: "Efficient LLM for Summarization",
+  img: "/efficient_llm_pruned.png",
+  desc: "We pruned and fine-tuned an LLM for summarization tasks.",
+  date: "December 2024",
+  tags: ["LLM"]
+};
+---
+
+<ProjectLayout {...project}>
+  <!-- Deep dive content -->
+  <h2 class="text-2xl font-semibold mb-4">Deep Dive</h2>
+  <p class="mb-4">
+    Modern day LLMs have billions of parameters, which present computational and financial barriers. In this project, we seek to 
+    train an efficient LLM by comparing structured and unstructured pruning of weights in an LLM and noting their effects on fine-tuned 
+    summarization tasks.
+  </p>
+
+  <h3 class="text-xl font-medium mb-2">Pipeline</h3>
+  <p class="mb-4">
+    We use pre-trained LLMs from Meta called Open Pre-trained Transformer (OPT) as our foundation model. In this project, we used both
+    the 125m model and the 350m model to see the effect of model size on pruning outcomes. We then prune the models at various settings,
+    followed by QLoRA fine-tuning for summarization using the BillSum dataset, which is a collection of US and California government 
+    bills. Finally, we evaluate the pruned and fine-tuned models on the test set.
+  </p>
+  <img src="/efficient_llm_pipeline.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    LLM pruning pipeline
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Pruning Methods: Wanda, Magnitude, SparseGPT</h3>
+  <p class="mb-4">
+    We explore three different types of pruning methods: Wanda 
+    (<a href="https://arxiv.org/abs/2306.11695" class="text-blue-600 underline">paper</a>), 
+    Magnitude (<a href="https://arxiv.org/abs/1506.02626" class="text-blue-600 underline">paper</a>), 
+    and SparseGPT (<a href="https://arxiv.org/abs/2301.00774" class="text-blue-600 underline">paper</a>). Wanda introduces two key 
+    innovations. The first is the Activation-Aware Scoring Metric: Wanda prunes weights by considering the smallest values obtained 
+    from the product of weights and input activations. In very large LLMs, a small subset of hidden state features tends to have 
+    much larger magnitudes than others. This contrasts with methods like Magnitude Pruning, which rely solely on weight magnitudes and 
+    a set threshold. The second innovation is the Localized Comparison Group: Wanda calculates weight importance scores on a 
+    per-output basis, rather than on a layer-wide or network-wide basis. Localized comparison consistently yields better results 
+    than traditional layer-wise pruning methods. SparseGPT is an accurate one-shot pruning technique which works efficiently at the 
+    scale of models with 10-100+ billion parameters.
+  </p>
+  <p class="mb-4">
+    We apply the pruning methods across three sparsity paradigms: unstructured sparsity, 2:4 semi-structured sparsity, and 
+    4:8 semi-structured sparsity. 
+  </p>
+
+  <p class="pl-6">
+    <strong>Unstructured Sparsity</strong>: This technique prunes 50% of the weights on a per-output basis, without additional 
+    constraints. It provides flexibility in weight selection and generally results in better model performance compared to 
+    structured methods.
+  </p>
+  <p class="pl-6">
+    <strong>N:M Structured Sparsity</strong>: This method also prunes 50% of the weights but imposes the constraint that at most 
+    N out of every M contiguous weights remain non-zero.
+  </p>
+
+
+  <h3 class="text-xl font-medium mb-2">Dataset</h3>
+  <p class="mb-4">
+    We utilize the BillSum dataset (<a href="https://aclanthology.org/D19-5406/" class="text-blue-600 underline">source</a>) 
+    from Hugging Face. The data consist of three parts: US bills (train set), US bills (validation set) and California bills 
+    (test set). The US bills were collected from the Govinfo service provided by the United States Government Publishing 
+    Office (GPO) under CC0-1.0 license. The California, bills from the 2015-2016 session are available from the legislature’s 
+    website.
+  </p>
+  <img src="/efficient_llm_billsum.png" class="mx-auto"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    BillSum example
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Evaluation Metrics</h3>
+  <p class="mb-4">
+    Below are the evaluation metrics we used:
+  </p>
+  <p class="pl-6">
+  <strong>ROUGE-L</strong>: A recall-oriented metric that looks for the longest common subsequence between the reference and the 
+  candidate.
+  </p>
+  <p class="pl-6">
+  <strong>BERTScore</strong>: A metric that leverages contextual BERT embeddings to evaluate the semantic similarity of the 
+  generated and reference texts.
+  </p>
+  <p class="pl-6">
+  <strong>Resource use</strong>: The number of parameters, time for inference on the test set, and the runtime memory of the models.
+  </p>
+
+  <h3 class="text-xl font-medium mb-2">Result</h3>
+  <p class="mb-4">
+    Models with unstructured sparsity generally outperform those with structured sparsity and structured sparsity offers faster 
+    inference times compared to unstructured sparsity.
+  </p>
+  <img src="/efficient_llm_result.png" class="mx-auto"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    LLM pruning evaluation result
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Conclusion</h3>
+  <p class="mb-4">
+    In conclusion, our study highlights several critical nuances in model pruning and optimization techniques. We demonstrate that 
+    structured N:M pruning diverges from traditional structured pruning by not effectively removing weights, which limits its 
+    performance advantages over unstructured pruning. From a performance perspective, unstructured pruning remains preferable, 
+    offering greater flexibility and often better retention of model accuracy. Additionally, quantization significantly enhances 
+    runtime efficiency, though it requires careful implementation to balance speed gains with potential accuracy loss.
+  </p>
+
+  <a href="https://github.com/ctl009/" class="btn btn-outline mt-6" target="_blank">
+    View on GitHub
+  </a>
+</ProjectLayout>
