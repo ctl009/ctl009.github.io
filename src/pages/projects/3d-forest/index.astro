@@ -14,54 +14,96 @@ const project = {
   <!-- Deep dive content -->
   <h2 class="text-2xl font-semibold mb-4">Deep Dive</h2>
   <p class="mb-4">
-    In this project, we program a 7 DoF Franka Emika Panda robotic arm to perform pick and place tasks of static and moving blocks.
+    In this project, we explore different implementations of a 3D reconstruction technique called 3D Gaussian Splatting (3DGS), which 
+    allows for real-time 3D rendering. It is much more computationally efficient than Neural Radiance Fields (NeRF), but 
+    requires significantly more memory to represent a scene. This project samples various methods for compressing 3DGS and assesses 
+    their quality and memory consumption using 360-camera images collected from a 30 second walk in a forest.
   </p>
 
   <h3 class="text-xl font-medium mb-2">Pipeline</h3>
   <p class="mb-4">
-    We divide the robot behavior into three separate modules. The first one is responsible for detecting and selecting a block to pick.
-    The second module performs the actual pick and place motions. The third module is responsible for detecting and selecting a 
-    moving block.
+    We first convert the 360-camera images into planar projected images. Then using COLMAP, we extract the required camera poses and
+    initial point cloud using structure-from-motion. The images, poses, and point cloud are then passed into the gaussian splatting
+    algorithm, which outputs the 3D reconstruction. 
   </p>
-  <img src="/pick_place_pipeline.png"/>
+  <img src="/3d_forest_pipeline.png"/>
   <figcaption class="text-sm text-gray-500 text-center">
-    Robot pick and place pipeline
+    3D gaussian splatting pipeline
   </figcaption>
 
-  <h3 class="text-xl font-medium mb-2">Module 1: Perception</h3>
+  <h3 class="text-xl font-medium mb-2">Gaussian Splatting Methods</h3>
   <p class="mb-4">
-    We cover the cube with AprilTags on all six sides to enable accurate detection of cube position and orientation. Due to the 
-    sensitivity of the camera image to different lighting conditions, the robot arm positions the camera at different angles to 
-    ascertain the cube location.
+    Below are the various gaussian splatting methods we evaluated:
   </p>
-  <img src="/pick_place_cube.png"/>
+  <p class="pl-6">
+  <strong>3D Gaussian Splatting (3DGS)</strong>: The original algorithm that creates new views by placing 3D Gaussians on a 
+  point cloud and blending them using a tile-based method for fast, high-quality rendering
+  (<a href="https://arxiv.org/abs/2308.04079" class="text-blue-600 underline">paper</a>).
+  </p>
+  <p class="pl-6">
+  <strong>Compact 3DGS</strong>: A memory-efficient implementation that saves memory and speeds up rendering by filtering 
+  out unnecessary Gaussians and compressing their data
+  (<a href="https://arxiv.org/abs/2311.13681" class="text-blue-600 underline">paper</a>).
+  </p>
+  <p class="pl-6">
+  <strong>EAGLES</strong>: A memory-efficient implementation that trains more efficiently by simplifying data, starting 
+  from low resolution, and removing Gaussians that don't contribute much
+  (<a href="https://arxiv.org/abs/2312.04564" class="text-blue-600 underline">paper</a>).
+  </p>
+  <p class="pl-6">
+  <strong>Splatfacto</strong>: A NerfStudio implementation that uses a custom fast renderer that blends all Gaussians 
+  for each pixel without cutting off early, aiming for sharper results
+  (<a href="https://arxiv.org/abs/2302.04264" class="text-blue-600 underline">paper</a>).
+  </p>
+
+  <h3 class="text-xl font-medium mb-2">Image Pre-processing</h3>
+  <p class="mb-4">
+    The initial point cloud was generated in two ways. In the left figure below, the point cloud was generated using NerfStudio's 
+    structure-from-motion that takes in distorted 360-camera images, undistorts them as part of the internal pipeline, and assumes 
+    the OpenCV camera model. In the right figure, the point cloud was generated using COLMAP and assumes the pinhole camera model.
+    The distortion correction was done using NerfStudio as well. It can be seen that the NerfStudio SfM pipeline generates a much more 
+    accurate point cloud.
+  </p>
+  <img src="/3d_forest_ptcloud.png"/>
   <figcaption class="text-sm text-gray-500 text-center">
-    AprilTags on cube
+    NerfStudio point cloud; OpenCV camera model (left), COLMAP point cloud; pinhole camera model (right)
   </figcaption>
 
-  <h3 class="text-xl font-medium mb-2">Module 2: Pick and Place Motion</h3>
+  <h3 class="text-xl font-medium mb-2">Result</h3>
   <p class="mb-4">
-    Once the location of the cube is known, the robot uses inverse kinematics to solve for the joint angle configuration required
-    to reach the point right above the cube. Once there, it slowly descends and closes the gripper and moves the cube to the 
-    stack.
+    The following 3D reconstructions were generated at 30k iterations, 2 FPS, and full resolution:
   </p>
-
-  <h3 class="text-xl font-medium mb-2">Module 3: Dynamic Block Perception</h3>
-  <p class="mb-4">
-    For the moving blocks, we initially planned on using the table rotation speed and the detected cube location to calculate where
-    the robot should intercept the cube. However, we were not able to synchronize the timing of the inverse kinematics solver and 
-    the robot arm motion with the intercept time. As such, we modified our approach to intercept the cube at a fixed location and 
-    grab when the cube reaches the gripper.
-  </p>
-
-  <h3 class="text-xl font-medium mb-2">Final Result</h3>
-  <p class="mb-4">
-    In this real-world test, we stack a total of 5 cubes: 4 static and 1 dynamic.
-  </p>
-  <img src="/robot_pick_place_real.gif" class="mx-auto"/>
+  <img src="/3d_forest_result.png"/>
   <figcaption class="text-sm text-gray-500 text-center">
-    Robot pick and place result
+    3D gaussian splatting result (pinhole camera model)
   </figcaption>
+
+  <p class="mb-4">
+    We also note the effect of resolution and iteration count on the evaluation metrics. Note the memory savings for the
+    memory-efficient gaussian splatting methods.
+  </p>
+  <img src="/3d_forest_table.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    3D gaussian splatting varying resolution and iteration count 
+  </figcaption>
+
+  <p class="mb-4">
+    Finally, we present the 3D reconstructions from NerfStudio's SplatFacto pipeline assuming OpenCV camera model. Note the level
+    of detail, even the words on the gate.
+  </p>
+  <img src="/3d_forest_splatfacto.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    3D Reconstructions using NerfStudio Splatfacto pipeline (OpenCV camera model)
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Conclusion</h3>
+  <p class="mb-4">
+    3DGS, Compact3DGS, EAGLES, and Splatfacto were able to generate novel views of a large scale forest scene with minimal 
+    training time and real-time rendering. Compact3DGS and EAGLES were able to reduce memory use with approximate or better 
+    rendered image quality. Splatfacto with OpenCV camera model data was able to render high quality novel views. The dataset 
+    using pinhole camera model and colmap point cloud initialization did not give good rendered images. Converting OpenCV 
+    camera model data to pinhole model data, as specified in the 3DGS documentation, did not resolve this issue.
+  </p>
 
   <a href="https://github.com/ctl009/" class="btn btn-outline mt-6" target="_blank">
     View on GitHub
