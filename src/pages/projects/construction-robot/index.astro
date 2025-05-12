@@ -3,8 +3,8 @@ import ProjectLayout from "../../../layouts/ProjectLayout.astro";
 
 const project = {
   title: "Construction Robot: Blown Insulation (Capstone)",
-  img: "/post_img.webp",
-  desc: "We developed a robot capable of delivering blown insulation autonomously.",
+  img: "/construction_robot.png",
+  desc: "A mobile robot capable of delivering blown insulation autonomously.",
   badge: "NEW",
   date: "May 2025",
   tags: ["Robotics", "Computer Vision"]
@@ -12,12 +12,203 @@ const project = {
 ---
 
 <ProjectLayout {...project}>
-  <!-- your deep-dive content: screenshots, tech stack, challenges, links… -->
+  <!-- Deep dive content -->
   <h2 class="text-2xl font-semibold mb-4">Deep Dive</h2>
-  <ul class="list-disc list-inside">
-    <li>ROS</li>
-  </ul>
-  <a href="https://github.com/ctl009/insulation-robot" class="btn btn-outline mt-6" target="_blank">
+  <p class="mb-4">
+    In this project, we propose a mobile robotic solution for installing blown insulation in attic-like environments. The project 
+    addresses the need to relieve human operators of a task that is both tedious and involves prolonged exposure to airborne 
+    insulation particles. We focus the scope of the project on two particular blowing applications: horizontal and vertical cavities.
+    We present an integrated robot prototype that demonstrates proof of concept for three core capabilities: autonomous exploration, 
+    cavity detection, and cavity filling.
+  </p>
+
+  <h3 class="text-xl font-medium mb-2">Pipeline</h3>
+  <p class="mb-4">
+    The robot’s execution logic includes three states:
+  </p>
+  <p class="mb-4">
+    <strong>Exploration</strong>: Navigate and process detections until all reachable area has been observed.
+  </p>
+  <p class="mb-4">
+    <strong>Target Acquisition</strong>: Query the cavity database for the nearest target and navigate to it.
+  </p>
+  <p class="mb-4">
+    <strong>Target Filling</strong>: Plan and track a trajectory to ensure coverage of the target while monitoring.
+  </p>
+  <p class="mb-4">
+    State transitions are managed by a central state machine node which delegates state logic to planners.
+  </p>
+
+  </p>
+  <img src="/construction_robot_behavior.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Behavior flow diagram
+  </figcaption>
+  <p class="mb-4">
+    The robot software is structured as a network of nodes which coordinate and share data with each other within ROS. We 
+    utilize parts of the ROS framework including topics services, actions, and standard message types as well as our own 
+    custom messages.
+  </p>
+  <img src="/construction_robot_software.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Software architecture
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Robot Hardware</h3>
+  <p class="mb-4">
+    Our prototype is based on the KUKA Youbot, a research platform consisting of a mobile base with a mountable 5 DoF arm. 4
+    This platform provides us the ability to traverse a space and also perform hose manipulations such as in the vertical 
+    blowing use case.
+  </p>
+  <p class="mb-4">
+    We made the following modifications to the Youbot to support our application:
+  </p>
+
+  <p class="mb-4">
+    <strong>Physical enhancements</strong>: A support rig to elevate the arm to waist height, and various hose mounting attachments 
+    to provide an interface for a blowing machine.
+  </p>
+  <p class="mb-4">
+    <strong>Computing enhancements</strong>: Two Raspberry Pis to compensate for limited compute on the YouBot, and a network switch 
+    to reduce latency for the distributed system.
+  </p>
+  <p class="mb-4">
+    <strong>Sensing enhancements</strong>: A 3D Lidar Puck for accurate localization and mapping, and an RGB-D camera for 
+    detection tasks.
+  </p>
+
+  <img src="/construction_robot_hardware.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Robot hardware
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Autonomous Navigation and Robot Arm Manipulation</h3>
+  <p class="mb-4">
+    We used the ROS1 packages SLAM_toolbox and Move_base to perform SLAM and navigation of the base. The ROS Move_it package was 
+    used to move the robot arm to the desired configuration.
+  </p>
+  <img src="/construction_robot_navigation.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Mapping
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Cavity Detection</h3>
+  <p class="mb-4">
+    While exploring the space the robot detects patterns indicating clusters of cavities. Observations are aggregated and 
+    cross-associated to generate a semantic map of the scene which accurately positions the detected clusters in space. 
+  </p>
+  <p class="mb-4">
+    Leveraging the expectation that cavities are parallel with the floor, incremental horizontal slices of point cloud are 
+    analyzed in 2D space. Line detection produces candidates filtered by checks for parallelism and consistent spacing. New 
+    observations that overlap known clusters are added using a modified Kalman filter with a constant dynamics model. This 
+    filter assumes individual observations are incomplete and allows the cluster to grow as additional boards are observed. 
+  </p>
+  <img src="/construction_robot_hor_detection.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Horizontal cavity detection
+  </figcaption>
+  <p class="mb-4">
+    A pretrained, lightweight object detection model identifies instances of the logo printed on the textile membrane covering the 
+    cavities. Nearby detections are grouped together to represent a wall of vertical cavities. Applying the pinhole model, the 
+    camera’s horizontal field of view is projected onto the robot’s obstacle map (from SLAM) by raycasting. Continuous observations 
+    update a heatmap by incrementing or decrementing likelihood at each cell. 
+  </p>
+  <img src="/construction_robot_vert_detection.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Vertical cavity detection
+  </figcaption>
+  <p class="mb-4">
+    Navigated by teleoperation, the robot produces stable pose estimates for all cavities in our lab setup and measures cavity 
+    dimensions accurately.
+  </p>
+  <img src="/construction_robot_detection.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Cavities placed on map
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Horizontal Cavity Fill Height Perception</h3>
+  <p class="mb-4">
+    We use the Xtion depth camera to get a point cloud of the deposited insulation, from which we use to create an elevation map. 
+    The order of operations of height detection is as follows:
+  </p>
+  <img src="/construction_robot_filtering_pipeline.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Fill height perception pipeline
+  </figcaption>
+  <p class="mb-4">
+    We improve point cloud accuracy using two depth image filters: a depth range limit of 0.35 m and a depth scaling correction 
+    that aligns depth camera data with lidar. To remove airborne insulation and channel walls, keeping only the deposited insulation, 
+    we apply custom PCL filters: a height filter that filters based on local z-differences, a persistence filter that keeps only 
+    static voxels over time, and a region growing filter that removes small, isolated clusters.
+  </p>
+  <img src="/construction_robot_filter.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Airborne insulation and channel wall filtering
+  </figcaption>
+  <p class="mb-4">
+    The resulting point cloud is used to update a ROS elevation map (generated using the elevation_mapping package from ETH Zurich) 
+    with relaxed thresholds to account for noisy depth data and dynamic insulation buildup.
+  </p>
+  <img src="/construction_robot_elevation.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Fill height elevation map
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Horizontal Cavity Filling</h3>
+  <p class="mb-4">
+    We model the insulation deposition during delivery as a 2D gaussian, where the gaussian represents the fill height rate of
+    change (m/s) with the center of the gaussian changing based on where the robot is aiming. The gaussian parameters are 
+    obtained by delivering the insulation for a short duration while keeping the robot stationary and fitting a 2D gaussian
+    to the resultant elevation map.
+  </p>
+  <img src="/construction_robot_gaussian.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Gaussian modeling of insulation dispersion
+  </figcaption>
+  <p class="mb-4">
+    To fill the cavity evenly, the robot moves in a snaking pattern which in effect moves the centers of the gaussian in the same
+    pattern, provided that the arm remains in the same configuration. The two trajectories are described in the figure below. In
+    the constant velocity case, the robot travels at a constant velocity down a row and travels backward in x-direction by a 
+    specified spacing before traveling down the row in the opposite direction. In the discrete case, the robot travels to the center
+    of a channel, dispenses insulation for a specified duration, then travels to the next channel, repeating in the same snaking 
+    pattern.
+  </p>
+  <img src="/construction_robot_trajectory.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Fill trajectory: continuous constant velocity (left), discrete stop-and-go (right)
+  </figcaption>
+  <p class="mb-4">
+    If the x and y spacings of the fill trajectory are on the order of the standard deviations or smaller, the resultant fill height
+    will be approximately even near the center of the cavity because of overlapping gaussians. To determine the fill parameters, we 
+    derived an equation that calculates the velocity, fill duration, and x-spacings of the fill trajectories given the desired fill
+    height. The numerical simulation below confirms our equation.
+  </p>
+  <img src="/construction_robot_simulation.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Insulation fill height simulation
+  </figcaption>
+  <p class="mb-4">
+    During trajectory execution, a feedback controller adjusts the robot’s velocity or fill time by estimating and updating 
+    Gaussian parameters that model insulation deposition. Using an extended Kalman filter, the system compensates for 
+    discrepancies between predicted and measured fill heights, updating either just the amplitude or a full set of 
+    parameters (amplitude, standard deviations, and x center). Updates occur every two rows to align with elevation map 
+    refreshes, which reflect deposition more accurately after the robot’s second traversal. We use the updated Gaussian parameters 
+    to recalculate the ideal velocity or fill time to meet target fill heights.
+  </p>
+  <img src="/construction_robot_feedback.png"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Insulation delivery feedback control
+  </figcaption>
+
+  <h3 class="text-xl font-medium mb-2">Robot in Action</h3>
+  <p class="mb-4">
+  </p>
+  <img src="/construction_robot_blowing.gif" class="mx-auto h-auto max-w-full"/>
+  <figcaption class="text-sm text-gray-500 text-center">
+    Horizontal cavity blow test
+  </figcaption>
+  
+  <a href="https://github.com/ctl009" class="btn btn-outline mt-6" target="_blank">
     View on GitHub
   </a>
 </ProjectLayout>
